@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Riddlemaster</title>
+  <link rel="preload" href="/fonts/space-grotesk.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">RIDDLEMASTER<span aria-hidden="true">.</span></a>
+    <a class="mind-link" data-mind-link href="https://app.hellominds.ai/" target="_blank" rel="noopener noreferrer">Open Mind<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true" focusable="false"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+  </header>
+  <div id="notice" role="status" aria-live="polite" hidden></div>
+  <main>
+    <aside class="sidebar">
+      <div class="library-heading">
+        <h2>Cases</h2>
+      </div>
+      <details id="case-library" open>
+        <summary>Choose a case</summary>
+        <nav id="cases" aria-label="Investigations"></nav>
+      </details>
+    </aside>
+
+    <section class="overview" aria-label="Investigation overview">
+      <div class="case-heading"><h1 id="case-title">Follow the clue.</h1><div id="source-info" hidden></div></div>
+      <div id="empty">
+        <p>Send a clue in Mind.<br>Follow the investigation here.</p>
+        <a class="primary-link" data-mind-link href="https://app.hellominds.ai/" target="_blank" rel="noopener noreferrer">Start in Mind</a>
+      </div>
+      <div id="case-content" hidden>
+        <nav id="stages" aria-label="Puzzle stages"></nav>
+        <section id="finding" class="finding" aria-labelledby="finding-value" hidden><div class="finding-heading"><h2 id="finding-value"></h2><span id="finding-label"></span></div><p id="finding-reason"></p></section>
+        <section class="progress" aria-label="Mind progress">
+          <p id="run-state" role="status" tabindex="-1">Choose a case.</p>
+          <p id="run-detail" class="quiet" hidden></p>
+          <a id="resume-mind" class="mind-link" data-mind-link href="https://app.hellominds.ai/" target="_blank" rel="noopener noreferrer" hidden>Continue in Mind</a>
+        </section>
+      </div>
+    </section>
+
+    <aside id="next-steps" class="mind-panel" aria-label="Next checks and saved hypotheses" hidden>
+      <h2>Next step</h2>
+      <div id="hypotheses"><p class="quiet">The investigation starts with a clue.</p></div>
+      <details id="investigation-history" class="investigation-history">
+        <summary>Other ideas</summary>
+        <div id="hypothesis-history"><p class="quiet">No saved branches yet.</p></div>
+      </details>
+    </aside>
+
+    <section id="case-materials" class="workspace" aria-label="Investigation materials" hidden>
+        <div class="material-heading"><h2>Evidence</h2></div>
+        <div id="artifacts" class="artifact-list" aria-label="Materials"></div>
+        <figure class="viewer">
+          <div id="preview"><p class="quiet">Choose a material.</p></div>
+        </figure>
+    </section>
+
+  </main>
+  <dialog id="image-zoom" class="image-zoom" aria-labelledby="zoom-title">
+    <div class="zoom-toolbar"><h2 id="zoom-title">Clue image</h2><button id="close-image" autofocus>Close</button></div>
+    <div id="zoom-content" class="zoom-scroll" tabindex="0" aria-label="Full-size image, scroll to inspect"></div>
+  </dialog>
+</body>
+</html>

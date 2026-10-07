@@ -1,0 +1,96 @@
+{
+  "example": "A missing-number image from a public puzzle post",
+  "source": "https://x.com/IntEngineering/status/2039840381387317491",
+  "outcome": "The player-selected row rule predicts 8. A squares interpretation predicts 1. Neither has independent confirmation.",
+  "runs": [
+    {
+      "step": "Link intake and initial hypotheses",
+      "status": "replied",
+      "protected_tool_calls": 5,
+      "actions": [
+        {
+          "action": "task_claim"
+        },
+        {
+          "action": "task_claim"
+        },
+        {
+          "action": "record_hypothesis",
+          "summary": "The image asks for the missing number in the grid rows 289, 324 and 36?."
+        },
+        {
+          "action": "record_hypothesis",
+          "summary": "Rows are 17^2, 18^2 and 19^2, so the missing digit would be 1 in 361."
+        },
+        {
+          "action": "record_hypothesis",
+          "summary": "Each row's first plus second digit minus one gives the third, predicting 8."
+        },
+        {
+          "action": "check_candidate",
+          "candidate": "1",
+          "verification": "unverified"
+        },
+        {
+          "action": "finish_investigation",
+          "summary": "The rows 289, 324 and 36? are the squares of 17, 18 and 19, so the missing digit is most likely 1 (361); a row rule adding the first two digits minus one also fits and gives 8. Both readings are saved, and neither was independently confirmed, so the answer stays uncertain."
+        }
+      ]
+    },
+    {
+      "step": "Web-selected branch check",
+      "status": "replied",
+      "protected_tool_calls": 3,
+      "actions": [
+        {
+          "action": "task_claim"
+        },
+        {
+          "action": "check_candidate",
+          "candidate": "8",
+          "verification": "unverified"
+        },
+        {
+          "action": "record_hypothesis",
+          "summary": "The row rule fits all three rows and predicts 8, but it stays unconfirmed next to the squares reading."
+        },
+        {
+          "action": "finish_investigation",
+          "summary": "The chosen idea was checked: each row's first plus second digit minus one fits all three rows and predicts the missing digit 8. Nothing in the image separates it from the squares reading (17², 18², 19² → 1), so the answer stays uncertain."
+        }
+      ]
+    }
+  ],
+  "chat": [
+    {
+      "speaker": "Player",
+      "text": "Solve this puzzle: https://x.com/IntEngineering/status/2039840381387317491"
+    },
+    {
+      "speaker": "Mind",
+      "text": "Case opened on the Interesting Engineering clue - reading the saved source and inspecting the image now.<br><br>[Open investigation]([local investigation])"
+    },
+    {
+      "speaker": "Mind",
+      "text": "The rows 289, 324 and 36? are the squares of 17, 18 and 19, so the missing digit is most likely 1 (361); a row rule adding the first two digits minus one also fits and gives 8. Both readings are saved, and neither was independently confirmed, so the answer stays uncertain.<br><br>[Open investigation]([local investigation])"
+    },
+    {
+      "speaker": "Player",
+      "text": "Check the selected idea. [Open investigation]([local investigation])"
+    },
+    {
+      "speaker": "Mind",
+      "text": "The chosen idea was checked: each row's first plus second digit minus one fits all three rows and predicts the missing digit 8. Nothing in the image separates it from the squares reading (17², 18², 19² → 1), so the answer stays uncertain.<br><br>[Open investigation]([local investigation])"
+    },
+    {
+      "speaker": "Mind",
+      "text": "Corrected link (the one above had a typo):<br><br>[Open investigation]([local investigation])"
+    }
+  ],
+  "recording": "Actual browser captures from this run. Waiting and navigation pauses were shortened. No fabricated replies or results.",
+  "limitations": [
+    "This ordinary puzzle has no independent answer validator.",
+    "The Mind corrected a mistyped investigation link in its branch reply.",
+    "First-time setup on another real account is unverified."
+  ]
+}

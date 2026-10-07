@@ -1,0 +1,17 @@
+node_modules/
+.env*
+!.env.example
+data/
+work/
+evidence/
+*.log
+.impeccable/
+docs/research/
+
+# Keep internal project notes and raw acceptance reports local.
+/DESIGN.md
+/PRODUCT.md
+/docs/*
+!/docs/setup.md
+!/docs/skill-playbook.md
+!/docs/demo/
