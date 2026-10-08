@@ -6,6 +6,7 @@ let followLatest = linkedCaseId === null;
 async function api(path, data) {
   const response = await fetch(path, data === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   const result = await response.json();
+  if (response.status === 401 && window.location.pathname === '/workspace') window.location.assign('/?case=' + encodeURIComponent(current?.id || linkedCaseId || ''));
   if (!response.ok) throw new Error(result.error || 'Request failed');
   return result;
 }
@@ -103,7 +104,7 @@ async function checkHypothesis(h) {
   pendingHypothesis = h.id;
   for (const b of document.querySelectorAll('[data-check-hypothesis]')) { b.disabled = true; if (b.dataset.checkHypothesis === h.id) b.textContent = 'Starting…'; }
   $('run-state').textContent = 'Starting Mind…'; $('run-state').dataset.status = 'starting';
-  try { await api(target('check-hypothesis'), { hypothesis_id: h.id }); selectedArtifact = null; }
+  try { await api(target('check-hypothesis'), { hypothesis_id: h.id, request_id: crypto.randomUUID() }); selectedArtifact = null; }
   finally { pendingHypothesis = null; await refresh(); }
 }
 

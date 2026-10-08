@@ -2,12 +2,22 @@ import { createMindsClient, parseHumanIdFromBuilderApiKey } from '@animocabrands
 import { parseEnv } from 'node:util';
 import { readFileSync, existsSync } from 'node:fs';
 import { createHmac, createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { requireValue } from './operations.js';
 import { fetchSource, sourceInput } from './source.js';
 
+const runtime = new AsyncLocalStorage();
+export const withMindsRuntime = (context, work) => runtime.run(context, work);
+export function sendAfterCommit(delivery) {
+  if (runtime.getStore()?.afterCommit) { runtime.getStore().afterCommit(delivery); return Promise.resolve(); }
+  return delivery();
+}
+const ownerId = () => config().MINDS_OWNER_ID || parseHumanIdFromBuilderApiKey(config().MINDS_BUILDER_API_KEY || '');
+const nativeHumanId = () => config().MINDS_HUMAN_ID || parseHumanIdFromBuilderApiKey(config().MINDS_BUILDER_API_KEY || '');
+
 export function config() {
   const local = existsSync('.env') ? parseEnv(readFileSync('.env', 'utf8')) : {};
-  return { ...process.env, ...local };
+  return { ...process.env, ...local, ...runtime.getStore()?.env };
 }
 export function redactEvidence(value) {
   return JSON.parse(JSON.stringify(value).replace(/([?&]token=)[0-9a-f]{64}/gi, '$1[redacted]').replace(/R[ML]-[0-9a-f]{64}/gi, '[redacted]').replace(/Bearer [0-9a-f]{64}/gi, 'Bearer [redacted]'));
@@ -27,8 +37,8 @@ export function completeAgentLink(store, input) {
   requireValue(!prior || prior === input.request_id, 'Pairing code already used', 409);
   if (!prior) {
     store.setSetting('agent_link_token', `RL-${randomBytes(32).toString('hex')}`);
-    store.setSetting('agent_link_expires', String(Date.now() + 7 * 24 * 60 * 60_000));
-    store.setSetting('agent_link_owner', parseHumanIdFromBuilderApiKey(config().MINDS_BUILDER_API_KEY || '') || '');
+    store.setSetting('agent_link_expires', String(Date.now() + (config().MINDS_OWNER_ID ? 365 : 7) * 24 * 60 * 60_000));
+    store.setSetting('agent_link_owner', ownerId() || '');
     store.setSetting('agent_link_mind', integrationStatus(store).mind_id || '');
     store.setSetting('agent_pair_request', input.request_id);
   }
@@ -70,9 +80,10 @@ export function artifactUrl(store, artifact, external = true) {
   return `${origin}/media/${artifact.case_id}/${artifact.id}?token=${mediaToken(store, artifact.case_id, artifact.id)}`;
 }
 export function investigationUrl(caseId) {
-  return `http://127.0.0.1:${Number(config().PORT || 4317)}/?case=${encodeURIComponent(caseId)}`;
+  return `${config().RIDDLEMASTER_WEB_URL || `http://127.0.0.1:${Number(config().PORT || 4317)}/`}?case=${encodeURIComponent(caseId)}`;
 }
 export function sdk() {
+  if (runtime.getStore()?.client) return runtime.getStore().client;
   const key = config().MINDS_BUILDER_API_KEY;
   requireValue(key, 'MINDS_BUILDER_API_KEY is missing in the local .env', 503);
   return createMindsClient({ builderApiKey: key });
@@ -80,9 +91,9 @@ export function sdk() {
 export function integrationStatus(store) {
   const env = config();
   const mindId = env.MINDS_MIND_ID || store.setting('mind_id') || null;
-  const ownerId = env.MINDS_BUILDER_API_KEY && parseHumanIdFromBuilderApiKey(env.MINDS_BUILDER_API_KEY);
-  const linked = Boolean(ownerId && mindId && store.setting('agent_link_token') && Date.now() < Number(store.setting('agent_link_expires')) && store.setting('agent_link_owner') === ownerId && store.setting('agent_link_mind') === mindId);
-  return { provider: 'HelloMinds', sdk_version: '0.1.7', key_configured: Boolean(env.MINDS_BUILDER_API_KEY),
+  const owner = ownerId();
+  const linked = Boolean(owner && mindId && store.setting('agent_link_token') && Date.now() < Number(store.setting('agent_link_expires')) && store.setting('agent_link_owner') === owner && store.setting('agent_link_mind') === mindId);
+  return { provider: 'HelloMinds', sdk_version: '0.1.7', key_configured: Boolean(env.MINDS_BUILDER_API_KEY || env.MINDS_AUTHENTICATED),
     mind_id: mindId,
     public_url: env.RIDDLEMASTER_PUBLIC_URL || null,
     app_ids: JSON.parse(store.setting('app_ids') || '[]'), skill_ids: JSON.parse(store.setting('skill_ids') || '[]'),
@@ -98,13 +109,14 @@ export async function runMind(store, run, text) {
     const alias = store.setting(`native_alias:${run.case_id}`);
     requireValue(alias, 'Send this clue in the native Riddlemaster chat first', 503);
     const conversation = await client.getConversation(alias);
-    requireValue(ownerNativeConversation(conversation, status.mind_id, parseHumanIdFromBuilderApiKey(config().MINDS_BUILDER_API_KEY)), 'The conversation must belong to this owner and Mind', 403);
+    requireValue(ownerNativeConversation(conversation, status.mind_id, nativeHumanId()), 'The conversation must belong to this owner and Mind', 403);
     queueNativeTask(store, run, text);
     const sent = `Check the selected idea. [Open investigation](${investigationUrl(run.case_id)})`;
     store.setSetting(`native_outgoing:${createHash('sha256').update(sent).digest('hex')}`, run.id);
     store.message(run.case_id, run.id, 'operator', sent);
     store.event(run.case_id, run.id, null, null, 'minds_send', { alias, transport: 'native_skill' }, { status: 'sending' });
-    await client.sendMessage({ alias, messageText: sent });
+    const delivery = () => client.sendMessage({ alias, messageText: sent });
+    await sendAfterCommit(delivery);
   } catch (error) {
     store.finishRun(run.id, 'failed', error.message);
     store.event(run.case_id, run.id, null, null, 'minds_error', {}, { status: 'failed', error: error.message });
@@ -147,7 +159,7 @@ export async function nativeSourceInput(message) {
   return sourceInput({ source_url: message.url, source_text: message.text || '', files });
 }
 
-export function startNativeBridge(store) {
+export function startNativeBridge(store, { poll = true } = {}) {
   let pending = null;
   // ponytail: one owner/Mind and bounded history polling; use SDK events plus paged replay for busy multi-user deployments.
   const tick = () => {
@@ -155,7 +167,7 @@ export function startNativeBridge(store) {
     if (pending) return pending;
     pending = (async () => {
     try {
-      const env = config(), client = sdk(), humanId = parseHumanIdFromBuilderApiKey(env.MINDS_BUILDER_API_KEY);
+      const client = sdk(), humanId = nativeHumanId();
       requireValue(humanId, 'Native intake requires an owner-bound Builder key');
       const mindId = integrationStatus(store).mind_id.toLowerCase();
       if (!store.setting('native_started_at')) store.setSetting('native_started_at', new Date().toISOString());
@@ -205,7 +217,7 @@ export function startNativeBridge(store) {
     })();
     return pending;
   };
-  const timer = setInterval(tick, 15_000);
-  void tick();
+  const timer = poll ? setInterval(tick, 15_000) : null;
+  if (poll) void tick();
   return { sync: tick, stop: () => clearInterval(timer) };
 }

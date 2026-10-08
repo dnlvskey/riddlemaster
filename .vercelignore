@@ -1,0 +1,12 @@
+.git/
+.env*
+data/
+work/
+evidence/
+scripts/
+docs/research/
+docs/demo/
+outputs/
+node_modules/
+*.log
+.impeccable/

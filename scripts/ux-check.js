@@ -58,7 +58,7 @@ try {
   const response = value => ({ ok: true, json: async () => JSON.parse(JSON.stringify(value)), text: async () => value });
   const context = {
     document: { getElementById: id => ids.get(id), createElement: tag => node(tag), querySelectorAll: query, activeElement: null, body: node('body', true) },
-    URL, matchMedia: () => ({ matches: true }), setInterval() {},
+    URL, crypto: { randomUUID }, matchMedia: () => ({ matches: true }), setInterval() {},
     fetch: async (path, options = {}) => {
       if (path === '/api/status') return response({ tools_ready: true, mind_id: 'test-mind' });
       if (path === '/api/cases') return response(store.listCases());

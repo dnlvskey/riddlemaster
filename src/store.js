@@ -223,6 +223,7 @@ export class Store {
     requireValue(!this.db.prepare("SELECT id FROM runs WHERE status='running'").get(), 'A Mind run is already in progress', 409);
     const c = this.createCase(url ? `Source · ${new URL(url).hostname}` : input.files[0]?.name || 'Text clue');
     this.db.prepare('INSERT INTO requests VALUES(?,?,?,?,?)').run(requestId, c.id, null, signature, JSON.stringify({ status: 'pending', case_id: c.id }));
+    await this.commitPending?.();
     let result;
     try {
       const received = await readInput(input);
@@ -304,13 +305,14 @@ export class Store {
       return null;
     });
     if (reused) return reused;
+    await this.commitPending?.();
     let result;
     try {
       if (operation === 'get_case_state') result = { state: this.mindState(caseId) };
       else if (operation === 'transform_artifact') {
         requireValue(stage.artifact_ids.includes(params.artifact_id), 'Choose an artifact in the active stage/branch');
         const source = this.artifact(params.artifact_id, caseId);
-        const transformed = await transform(this.file(source.id), source.mime, params.operation, params.params);
+        const transformed = await transform(await this.file(source.id), source.mime, params.operation, params.params);
         requireValue(this.getCase(caseId).artifacts.length < 100, 'Artifact limit reached');
         const artifact = this.addArtifact(caseId, stageId, `${params.operation}-${source.name.replace(/\.[^.]*$/, '')}.${transformed.mime === 'image/png' ? 'png' : 'txt'}`, transformed.mime, transformed.buffer, source.id, params.operation, params.params ?? {});
         result = { artifact, ...(artifact.mime === 'text/plain' ? { text: transformed.buffer.toString('utf8').slice(0, 8000) } : {}), stage_id: stageId };

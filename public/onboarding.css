@@ -1,0 +1,10 @@
+.onboarding { display: block; max-width: 880px; padding: clamp(32px, 9vw, 100px) 24px; margin: 0 auto; }
+.welcome { max-width: 620px; }
+.eyebrow { font-size: .75rem; font-weight: 600; letter-spacing: .14em; }
+.welcome h1 { font-size: clamp(3rem, 8vw, 5.5rem); line-height: 1; letter-spacing: -.07em; margin: 24px 0; }
+.welcome > p { font-size: 1.125rem; margin-bottom: 28px; }
+.welcome > button { margin-bottom: 12px; }
+.welcome #status { font-size: .875rem; max-width: 48ch; }
+#result { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 16px; }
+.topbar button { min-height: 36px; }
+[hidden] { display: none !important; }

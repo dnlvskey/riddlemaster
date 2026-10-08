@@ -8,11 +8,14 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/server.js",
+    "onboarding": "node src/onboarding-server.js",
     "minds:inspect": "node --env-file-if-exists=.env scripts/minds-setup.js inspect",
     "check": "node scripts/self-check.js"
   },
   "dependencies": {
     "@animocabrands/minds-client-lib": "^0.1.7",
+    "@animocabrands/minds-connect": "0.1.2",
+    "@vercel/blob": "2.8.1",
     "sharp": "^0.35.5"
   }
 }

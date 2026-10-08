@@ -4,6 +4,8 @@ An AI investigation partner for ARGs and linked puzzles, built with HelloMinds.
 
 Send a puzzle link, text or image to your Mind. Riddlemaster saves the clues, tries ideas and shows its findings in a web workspace. Pick an idea to check, and the same Mind continues the investigation.
 
+[Try the hosted preview](https://riddlemaster.vercel.app/). HelloMinds sign-in and Mind creation are verified. Automatic Skill setup and the full cloud investigation flow are not yet verified.
+
 [Watch the demo](https://github.com/dnlvskey/riddlemaster/blob/main/docs/demo/riddlemaster-demo.mp4)
 
 ![Riddlemaster investigation](docs/demo/workspace.png)
@@ -40,6 +42,6 @@ Open **http://127.0.0.1:4317**. To let your Mind investigate puzzles, follow the
 - Saved clues, text decoding, image experiments and alternative hypotheses.
 - Interactive next steps, checkpoints and preserved attempt limits.
 
-This is a **local, single-owner MVP**. It is not a hosted service or a public One-Click Mind. The demo shows real HelloMinds calls; another account's first-time setup has not yet been verified.
+The local version uses your Builder API key. The hosted preview uses HelloMinds sign-in and private account workspaces.
 
 See [demo notes](docs/demo/README.md) for the example and its limitations.
